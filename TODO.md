@@ -7,5 +7,6 @@
 - [ ] Sin/cos with random angles as embeddings and see how they perform
 - [ ] Test vectors and matrices with only +1/-1 entries
 - [ ] Test fixed vs learned vectors
+- [ ] Composite functions with multiple inputs/outputs: combine inputs into a single vector, same for outputs
 - [ ] Formulate relationship to information theory (e.g. number of bits needed to represent/distinguish embeddings)
 - [ ] All of the above should be tested on varying n, varying number of dimensions, and checking cosine similarity
