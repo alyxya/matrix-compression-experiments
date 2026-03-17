@@ -3,4 +3,5 @@
 - [ ] Random functions f(1..n) → 1..n where each number is an embedding vector
 - [ ] Random permutation functions that are orthogonal
 - [ ] Random permutation functions split in half: 1..n/2 → 1..n/2 and n/2+1..n → n/2+1..n
+- [ ] Subspace embeddings: represent each element by a subspace rather than a single vector
 - [ ] All of the above should be tested on varying n, varying number of dimensions, and checking cosine similarity
