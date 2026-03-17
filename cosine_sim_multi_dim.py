@@ -19,7 +19,7 @@ for dim in dims:
 plt.xlim(-0.4, 0.4)
 plt.xlabel("Cosine Similarity")
 plt.ylabel("Probability Density (area under each curve = 1)")
-plt.title(f"Cosine Similarity Distribution by Dimension ({n_vectors} random unit vectors)")
+plt.title("Cosine Similarity Distribution by Dimension (random unit vectors)")
 plt.legend()
 plt.tight_layout()
 plt.savefig("images/cosine_sim_multi_dim.png", dpi=150)
