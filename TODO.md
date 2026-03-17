@@ -5,4 +5,5 @@
 - [ ] Random permutation functions split in half: 1..n/2 → 1..n/2 and n/2+1..n → n/2+1..n
 - [ ] Subspace embeddings for the split-in-half case: represent each element by a subspace rather than a single vector
 - [ ] Sin/cos with random angles as embeddings and see how they perform
+- [ ] Test vectors and matrices with only +1/-1 entries
 - [ ] All of the above should be tested on varying n, varying number of dimensions, and checking cosine similarity
