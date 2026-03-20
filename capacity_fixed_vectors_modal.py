@@ -2,14 +2,12 @@ import modal
 
 app = modal.App("capacity-fixed-vectors")
 
-image = modal.Image.debian_slim(python_version="3.12").pip_install("torch", "matplotlib")
+image = modal.Image.debian_slim(python_version="3.12").pip_install("torch", "numpy")
 
 @app.function(image=image, gpu="T4", timeout=3600)
 def run_sweep():
     import torch
-    import matplotlib.pyplot as plt
 
-    # inline the functions so they run remotely
     def newton_schulz(M, num_iters=15):
         d = M.shape[0]
         I = torch.eye(d, device=M.device)
@@ -90,7 +88,21 @@ def run_sweep():
             results[dim][n] = pct
             print(f"dim={dim:>4}, n={n:>5}: {correct}/{n} ({pct:.1f}%)", flush=True)
 
-    # plot
+    return results
+
+@app.local_entrypoint()
+def main():
+    import matplotlib.pyplot as plt
+
+    results = run_sweep.remote()
+
+    print("\n=== Final Results ===")
+    for dim in sorted(results.keys()):
+        for n in sorted(results[dim].keys()):
+            print(f"  dim={dim:>4}, n={n:>5}: {results[dim][n]:.1f}%")
+
+    dims = sorted(results.keys())
+
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
     for dim in dims:
@@ -127,14 +139,5 @@ def run_sweep():
     ax2.grid(True, alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig("/tmp/capacity_fixed_vectors.png", dpi=150)
-
-    return results
-
-@app.local_entrypoint()
-def main():
-    results = run_sweep.remote()
-    print("\n=== Final Results ===")
-    for dim in sorted(results.keys()):
-        for n in sorted(results[dim].keys()):
-            print(f"  dim={dim:>4}, n={n:>5}: {results[dim][n]:.1f}%")
+    plt.savefig("images/capacity_fixed_vectors.png", dpi=150)
+    print("\nPlot saved to images/capacity_fixed_vectors.png")
