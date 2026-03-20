@@ -4,6 +4,7 @@ from permutation_rotation import train, random_unit_vectors, random_ortho, newto
 
 dims = [5, 10, 20, 50, 100, 200, 500, 1000]
 ns = [5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000]
+steps = 10000
 lr = 0.1
 
 results = {}
