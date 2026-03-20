@@ -4,7 +4,6 @@ from permutation_rotation import train, random_unit_vectors, random_ortho, newto
 
 dims = [5, 10, 20, 50, 100, 200, 500, 1000]
 ns = [5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000]
-steps = 10000
 lr = 0.1
 
 results = {}
@@ -14,10 +13,10 @@ for dim in dims:
     for n in ns:
         if n < dim:
             continue
-        correct = train(dim, n, steps, lr=lr, learn_vectors=False)
+        correct = train(dim, n, lr=lr, learn_vectors=False)
         pct = 100 * correct / n
         results[dim][n] = pct
-        print(f"dim={dim:>3}, n={n:>4}: {correct}/{n} ({pct:.1f}%)", flush=True)
+        print(f"dim={dim:>3}, n={n:>5}: {correct}/{n} ({pct:.1f}%)", flush=True)
 
 # Plot 1: accuracy vs n for each dim
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))

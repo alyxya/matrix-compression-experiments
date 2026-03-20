@@ -3,7 +3,7 @@ import torch
 def newton_schulz(M, num_iters=15):
     """Project M onto nearest orthogonal matrix via Newton-Schulz iterations."""
     d = M.shape[0]
-    I = torch.eye(d)
+    I = torch.eye(d, device=M.device)
     # scale so singular values are in convergence range (0, sqrt(3))
     X = M * (d ** 0.5) / M.norm()
     for _ in range(num_iters):
@@ -24,13 +24,17 @@ def evaluate(M, vecs, perm):
     correct = (predictions == perm).sum().item()
     return correct
 
-def train(dim, n, steps, lr=0.01, learn_vectors=False):
-    vecs = random_unit_vectors(n, dim)
-    M = random_ortho(dim)
-    perm = torch.randperm(n)
+def train(dim, n, lr=0.01, learn_vectors=False, max_steps=100000, patience=1000, device='cpu'):
+    vecs = random_unit_vectors(n, dim).to(device)
+    M = random_ortho(dim).to(device)
+    I = torch.eye(dim, device=device)
+    perm = torch.randperm(n, device=device)
     inv_perm = torch.argsort(perm)
 
-    for step in range(steps):
+    best_correct = 0
+    steps_since_improve = 0
+
+    for step in range(max_steps):
         outputs = M @ vecs.T          # (dim, n)
         targets = vecs[perm].T        # (dim, n)
         errors = targets - outputs    # (dim, n)
@@ -38,7 +42,7 @@ def train(dim, n, steps, lr=0.01, learn_vectors=False):
         # matrix update: accumulate small rotations across all pairs
         # for each pair: R_i = I + lr * (target - output) @ output^T
         # batched average: R = I + lr/n * errors @ outputs^T
-        R = torch.eye(dim) + lr * (errors @ outputs.T) / n
+        R = I + lr * (errors @ outputs.T) / n
         M = R @ M
         M = newton_schulz(M)
 
@@ -55,21 +59,30 @@ def train(dim, n, steps, lr=0.01, learn_vectors=False):
             vecs = vecs + lr * (ideal_input + ideal_output - 2 * vecs)
             vecs = vecs / vecs.norm(dim=1, keepdim=True)
 
-        print_every = max(500, steps // 10)
-        if step % print_every == 0 or step == steps - 1:
+        # check for saturation
+        eval_every = max(100, patience // 10)
+        if step % eval_every == 0:
             correct = evaluate(M, vecs, perm)
-            print(f"  Step {step:>5}: {correct}/{n} ({100*correct/n:.1f}%)")
+            if correct > best_correct:
+                best_correct = correct
+                steps_since_improve = 0
+            else:
+                steps_since_improve += eval_every
+            if step % (eval_every * 10) == 0:
+                print(f"  Step {step:>6}: {correct}/{n} ({100*correct/n:.1f}%)", flush=True)
+            if correct == n or steps_since_improve >= patience:
+                print(f"  Step {step:>6}: {correct}/{n} ({100*correct/n:.1f}%) [saturated]", flush=True)
+                break
 
-    return evaluate(M, vecs, perm)
+    return best_correct
 
 
 if __name__ == "__main__":
     dim = 10
     n = 100
-    steps = 5000
 
     print(f"=== Fixed vectors (dim={dim}, n={n}) ===")
-    train(dim, n, steps, learn_vectors=False)
+    train(dim, n, learn_vectors=False)
 
     print(f"\n=== Learned vectors (dim={dim}, n={n}) ===")
-    train(dim, n, steps, learn_vectors=True)
+    train(dim, n, learn_vectors=True)
