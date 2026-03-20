@@ -55,7 +55,8 @@ def train(dim, n, steps, lr=0.01, learn_vectors=False):
             vecs = vecs + lr * (ideal_input + ideal_output - 2 * vecs)
             vecs = vecs / vecs.norm(dim=1, keepdim=True)
 
-        if step % 500 == 0 or step == steps - 1:
+        print_every = max(500, steps // 10)
+        if step % print_every == 0 or step == steps - 1:
             correct = evaluate(M, vecs, perm)
             print(f"  Step {step:>5}: {correct}/{n} ({100*correct/n:.1f}%)")
 

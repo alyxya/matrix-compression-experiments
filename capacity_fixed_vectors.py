@@ -2,10 +2,10 @@ import torch
 import matplotlib.pyplot as plt
 from permutation_rotation import train, random_unit_vectors, random_ortho, newton_schulz, evaluate
 
-dims = [5, 10, 20, 50, 100]
-ns = [5, 10, 20, 50, 100, 200, 500, 1000]
-steps = 5000
-lr = 0.05
+dims = [5, 10, 20, 50, 100, 200, 500, 1000]
+ns = [5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000]
+steps = 10000
+lr = 0.1
 
 results = {}
 
