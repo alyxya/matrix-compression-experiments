@@ -29,17 +29,14 @@ def run_sweep():
         predictions = sims.argmax(dim=1)
         return (predictions == perm).sum().item()
 
-    def train(dim, n, lr=0.01, learn_vectors=False, max_steps=100000, patience=1000, device='cuda'):
+    def train(dim, n, steps, lr=0.01, learn_vectors=False, device='cuda'):
         vecs = random_unit_vectors(n, dim, device=device)
         M = random_ortho(dim, device=device)
         I = torch.eye(dim, device=device)
         perm = torch.randperm(n, device=device)
         inv_perm = torch.argsort(perm)
 
-        best_correct = 0
-        steps_since_improve = 0
-
-        for step in range(max_steps):
+        for step in range(steps):
             outputs = M @ vecs.T
             targets = vecs[perm].T
             errors = targets - outputs
@@ -56,24 +53,16 @@ def run_sweep():
                 vecs = vecs + lr * (ideal_input + ideal_output - 2 * vecs)
                 vecs = vecs / vecs.norm(dim=1, keepdim=True)
 
-            eval_every = max(100, patience // 10)
-            if step % eval_every == 0:
+            print_every = max(500, steps // 10)
+            if step % print_every == 0 or step == steps - 1:
                 correct = evaluate(M, vecs, perm)
-                if correct > best_correct:
-                    best_correct = correct
-                    steps_since_improve = 0
-                else:
-                    steps_since_improve += eval_every
-                if step % (eval_every * 10) == 0:
-                    print(f"  Step {step:>6}: {correct}/{n} ({100*correct/n:.1f}%)", flush=True)
-                if correct == n or steps_since_improve >= patience:
-                    print(f"  Step {step:>6}: {correct}/{n} ({100*correct/n:.1f}%) [saturated]", flush=True)
-                    break
+                print(f"  Step {step:>5}: {correct}/{n} ({100*correct/n:.1f}%)", flush=True)
 
-        return best_correct
+        return evaluate(M, vecs, perm)
 
     dims = [5, 10, 20, 50, 100, 200, 500, 1000]
     ns = [5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000]
+    steps = 10000
     lr = 0.1
 
     results = {}
@@ -83,7 +72,7 @@ def run_sweep():
         for n in ns:
             if n < dim:
                 continue
-            correct = train(dim, n, lr=lr, learn_vectors=False)
+            correct = train(dim, n, steps=steps, lr=lr, learn_vectors=False)
             pct = 100 * correct / n
             results[dim][n] = pct
             print(f"dim={dim:>4}, n={n:>5}: {correct}/{n} ({pct:.1f}%)", flush=True)

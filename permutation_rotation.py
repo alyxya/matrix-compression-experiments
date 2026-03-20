@@ -24,17 +24,14 @@ def evaluate(M, vecs, perm):
     correct = (predictions == perm).sum().item()
     return correct
 
-def train(dim, n, lr=0.01, learn_vectors=False, max_steps=100000, patience=1000, device='cpu'):
+def train(dim, n, steps, lr=0.01, learn_vectors=False, device='cpu'):
     vecs = random_unit_vectors(n, dim).to(device)
     M = random_ortho(dim).to(device)
     I = torch.eye(dim, device=device)
     perm = torch.randperm(n, device=device)
     inv_perm = torch.argsort(perm)
 
-    best_correct = 0
-    steps_since_improve = 0
-
-    for step in range(max_steps):
+    for step in range(steps):
         outputs = M @ vecs.T          # (dim, n)
         targets = vecs[perm].T        # (dim, n)
         errors = targets - outputs    # (dim, n)
@@ -59,22 +56,12 @@ def train(dim, n, lr=0.01, learn_vectors=False, max_steps=100000, patience=1000,
             vecs = vecs + lr * (ideal_input + ideal_output - 2 * vecs)
             vecs = vecs / vecs.norm(dim=1, keepdim=True)
 
-        # check for saturation
-        eval_every = max(100, patience // 10)
-        if step % eval_every == 0:
+        print_every = max(500, steps // 10)
+        if step % print_every == 0 or step == steps - 1:
             correct = evaluate(M, vecs, perm)
-            if correct > best_correct:
-                best_correct = correct
-                steps_since_improve = 0
-            else:
-                steps_since_improve += eval_every
-            if step % (eval_every * 10) == 0:
-                print(f"  Step {step:>6}: {correct}/{n} ({100*correct/n:.1f}%)", flush=True)
-            if correct == n or steps_since_improve >= patience:
-                print(f"  Step {step:>6}: {correct}/{n} ({100*correct/n:.1f}%) [saturated]", flush=True)
-                break
+            print(f"  Step {step:>5}: {correct}/{n} ({100*correct/n:.1f}%)", flush=True)
 
-    return best_correct
+    return evaluate(M, vecs, perm)
 
 
 if __name__ == "__main__":
@@ -82,7 +69,7 @@ if __name__ == "__main__":
     n = 100
 
     print(f"=== Fixed vectors (dim={dim}, n={n}) ===")
-    train(dim, n, learn_vectors=False)
+    train(dim, n, steps=10000, learn_vectors=False)
 
     print(f"\n=== Learned vectors (dim={dim}, n={n}) ===")
-    train(dim, n, learn_vectors=True)
+    train(dim, n, steps=10000, learn_vectors=True)

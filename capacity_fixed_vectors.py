@@ -13,7 +13,7 @@ for dim in dims:
     for n in ns:
         if n < dim:
             continue
-        correct = train(dim, n, lr=lr, learn_vectors=False)
+        correct = train(dim, n, steps=steps, lr=lr, learn_vectors=False)
         pct = 100 * correct / n
         results[dim][n] = pct
         print(f"dim={dim:>3}, n={n:>5}: {correct}/{n} ({pct:.1f}%)", flush=True)
